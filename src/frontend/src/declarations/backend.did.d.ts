@@ -10,23 +10,38 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface BlogPost {
+  'id' : bigint,
+  'title' : string,
+  'content' : string,
+  'author' : Principal,
+  'timestamp' : Time,
+}
+export type ExternalBlob = Uint8Array;
 export interface Order {
   'id' : bigint,
-  'status' : string,
-  'userId' : Principal,
+  'status' : { 'pending' : null } |
+    { 'paid' : null } |
+    { 'failed' : null },
+  'productIds' : Array<string>,
   'createdAt' : Time,
-  'productId' : string,
-  'currency' : string,
-  'stripePaymentIntentId' : [] | [string],
-  'amount' : bigint,
+  'totalCents' : bigint,
+  'stripePaymentId' : string,
+  'buyer' : Principal,
 }
 export interface Product {
   'id' : string,
-  'name' : string,
+  'title' : string,
+  'active' : boolean,
+  'thumbnail' : ExternalBlob,
+  'file' : ExternalBlob,
+  'createdAt' : Time,
   'description' : string,
-  'currency' : string,
-  'priceInCents' : bigint,
+  'seller' : Principal,
+  'category' : string,
+  'priceCents' : bigint,
 }
+export interface ShoppingCart { 'products' : Array<string> }
 export interface ShoppingItem {
   'productName' : string,
   'currency' : string,
@@ -52,9 +67,25 @@ export interface TransformationOutput {
   'body' : Uint8Array,
   'headers' : Array<http_header>,
 }
+export interface UserProfile {
+  'principal' : Principal,
+  'name' : string,
+  'role' : UserRole,
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface _CaffeineStorageCreateCertificateResult {
+  'method' : string,
+  'blob_hash' : string,
+}
+export interface _CaffeineStorageRefillInformation {
+  'proposed_top_up_amount' : [] | [bigint],
+}
+export interface _CaffeineStorageRefillResult {
+  'success' : [] | [boolean],
+  'topped_up_amount' : [] | [bigint],
+}
 export interface http_header { 'value' : string, 'name' : string }
 export interface http_request_result {
   'status' : bigint,
@@ -62,23 +93,58 @@ export interface http_request_result {
   'headers' : Array<http_header>,
 }
 export interface _SERVICE {
+  '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
+  '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
+  '_caffeineStorageConfirmBlobDeletion' : ActorMethod<
+    [Array<Uint8Array>],
+    undefined
+  >,
+  '_caffeineStorageCreateCertificate' : ActorMethod<
+    [string],
+    _CaffeineStorageCreateCertificateResult
+  >,
+  '_caffeineStorageRefillCashier' : ActorMethod<
+    [[] | [_CaffeineStorageRefillInformation]],
+    _CaffeineStorageRefillResult
+  >,
+  '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addProduct' : ActorMethod<[Product], undefined>,
+  'addToCart' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'confirmOrder' : ActorMethod<[bigint, string], undefined>,
+  'canAccessFile' : ActorMethod<[string], boolean>,
+  'clearCart' : ActorMethod<[], undefined>,
+  'createBlogPost' : ActorMethod<[string, string], undefined>,
   'createCheckoutSession' : ActorMethod<
     [Array<ShoppingItem>, string, string],
     string
   >,
-  'createOrder' : ActorMethod<[string], bigint>,
-  'getAllOrders' : ActorMethod<[], Array<Order>>,
+  'createOrder' : ActorMethod<[Array<string>, bigint, string], undefined>,
+  'createStripePaymentIntent' : ActorMethod<[bigint, string], string>,
+  'deleteProduct' : ActorMethod<[string], undefined>,
+  'getAllProducts' : ActorMethod<[], Array<Product>>,
+  'getBlogPost' : ActorMethod<[bigint], BlogPost>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getProducts' : ActorMethod<[], Array<Product>>,
+  'getCart' : ActorMethod<[], ShoppingCart>,
+  'getMyOrders' : ActorMethod<[], Array<Order>>,
+  'getProduct' : ActorMethod<[string], Product>,
+  'getProductFile' : ActorMethod<[string], ExternalBlob>,
+  'getProductsByCategory' : ActorMethod<[string], Array<Product>>,
+  'getProductsBySeller' : ActorMethod<[Principal], Array<Product>>,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
-  'getUserOrders' : ActorMethod<[], Array<Order>>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
+  'listBlogPosts' : ActorMethod<[], Array<BlogPost>>,
+  'markOrderPaid' : ActorMethod<[bigint], undefined>,
+  'removeFromCart' : ActorMethod<[string], undefined>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'searchProducts' : ActorMethod<[string], Array<Product>>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
+  'updateProduct' : ActorMethod<[Product], undefined>,
+  'updateProfile' : ActorMethod<[string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
