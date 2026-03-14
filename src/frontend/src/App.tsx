@@ -1,74 +1,72 @@
-import { Footer } from "@/components/layout/Footer";
-import { Header } from "@/components/layout/Header";
 import { Toaster } from "@/components/ui/sonner";
-import { Admin } from "@/pages/Admin";
-import { CheckoutSuccess } from "@/pages/CheckoutSuccess";
-import { Home } from "@/pages/Home";
-import { Orders } from "@/pages/Orders";
-import { ProductDetail } from "@/pages/ProductDetail";
-import { Products } from "@/pages/Products";
-import { useState } from "react";
+import {
+  Outlet,
+  RouterProvider,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from "@tanstack/react-router";
+import Footer from "./components/Footer";
+import Navbar from "./components/Navbar";
+import AdminPage from "./pages/AdminPage";
+import OrdersPage from "./pages/OrdersPage";
+import ProductsPage from "./pages/ProductsPage";
+import SuccessPage from "./pages/SuccessPage";
 
-export type Page =
-  | "home"
-  | "products"
-  | "orders"
-  | "admin"
-  | "product-detail"
-  | "success";
+// ── Root layout ──────────────────────────────────────────────────────────────
+const rootRoute = createRootRoute({
+  component: () => (
+    <div className="min-h-screen flex flex-col bg-background">
+      <Navbar />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <Footer />
+      <Toaster richColors position="top-right" />
+    </div>
+  ),
+});
+
+// ── Routes ───────────────────────────────────────────────────────────────────
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: ProductsPage,
+});
+
+const successRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/success",
+  component: SuccessPage,
+});
+
+const ordersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/orders",
+  component: OrdersPage,
+});
+
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin",
+  component: AdminPage,
+});
+
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  successRoute,
+  ordersRoute,
+  adminRoute,
+]);
+
+const router = createRouter({ routeTree });
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>("home");
-  const [currentProductId, setCurrentProductId] = useState<string | undefined>(
-    undefined,
-  );
-
-  const navigate = (page: Page, productId?: string) => {
-    setCurrentPage(page);
-    if (productId !== undefined) {
-      setCurrentProductId(productId);
-    }
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case "home":
-        return <Home onNavigate={navigate} />;
-      case "products":
-        return <Products onNavigate={navigate} />;
-      case "product-detail":
-        return currentProductId ? (
-          <ProductDetail productId={currentProductId} onNavigate={navigate} />
-        ) : (
-          <Products onNavigate={navigate} />
-        );
-      case "success":
-        return <CheckoutSuccess onNavigate={navigate} />;
-      case "orders":
-        return <Orders onNavigate={navigate} />;
-      case "admin":
-        return <Admin onNavigate={navigate} />;
-      default:
-        return <Home onNavigate={navigate} />;
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Header currentPage={currentPage} onNavigate={navigate} />
-      <main className="flex-1">{renderPage()}</main>
-      <Footer />
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          classNames: {
-            toast: "bg-card border-border text-foreground",
-            success: "border-[oklch(0.72_0.17_150/0.5)]",
-            error: "border-destructive/50",
-          },
-        }}
-      />
-    </div>
-  );
+  return <RouterProvider router={router} />;
 }

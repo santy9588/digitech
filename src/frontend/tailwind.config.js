@@ -16,17 +16,17 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Bricolage Grotesque", "sans-serif"],
-        body: ["Outfit", "sans-serif"],
-        mono: ["Geist Mono", "monospace"],
+        display: ['"Cabinet Grotesk"', "sans-serif"],
+        body: ["Satoshi", "sans-serif"],
+        mono: ['"Geist Mono"', "monospace"],
       },
       colors: {
         success: {
-          DEFAULT: "oklch(var(--success))",
+          DEFAULT: "oklch(var(--success) / <alpha-value>)",
           foreground: "oklch(var(--success-foreground))",
         },
         warning: {
-          DEFAULT: "oklch(var(--warning))",
+          DEFAULT: "oklch(var(--warning) / <alpha-value>)",
           foreground: "oklch(var(--warning-foreground))",
         },
         border: "oklch(var(--border))",

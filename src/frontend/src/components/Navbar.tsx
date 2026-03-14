@@ -1,194 +1,102 @@
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import {
-  ArrowUpDown,
-  BookOpen,
-  ChevronDown,
-  LayoutDashboard,
-  LogOut,
-  Package,
-  ShoppingCart,
-  User,
-} from "lucide-react";
-import { UserRole } from "../backend";
+import { cn } from "@/lib/utils";
+import { Link, useRouter } from "@tanstack/react-router";
+import { Loader2, LogIn, LogOut, ShieldCheck, Zap } from "lucide-react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
-import { useGetCallerUserProfile } from "../hooks/useQueries";
-import { useGetCart } from "../hooks/useQueries";
+import { useIsAdmin } from "../hooks/useQueries";
 
 export default function Navbar() {
-  const { login, clear, loginStatus, identity } = useInternetIdentity();
+  const { login, clear, identity, isLoggingIn, isInitializing } =
+    useInternetIdentity();
+  const { data: isAdmin } = useIsAdmin();
+  const router = useRouter();
+  const currentPath = router.state.location.pathname;
+
   const isAuthenticated = !!identity;
-  const isLoggingIn = loginStatus === "logging-in";
-  const queryClient = useQueryClient();
 
-  const { data: profile } = useGetCallerUserProfile();
-  const { data: cart } = useGetCart();
-
-  const cartCount = cart?.products?.length ?? 0;
-  const isSeller =
-    profile?.role === UserRole.admin || profile?.role === UserRole.user;
-  const isAdmin = profile?.role === UserRole.admin;
-
-  const handleLogout = async () => {
-    await clear();
-    queryClient.clear();
-  };
+  const navLinkClass = (path: string) =>
+    cn(
+      "relative text-sm font-medium transition-colors duration-150 px-1 py-0.5",
+      "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:rounded-full after:transition-all after:duration-200",
+      currentPath === path
+        ? "text-primary after:bg-primary"
+        : "text-muted-foreground hover:text-foreground after:bg-transparent hover:after:bg-primary/40",
+    );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
-      <nav className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
-        {/* Logo */}
-        <Link
-          to="/"
-          data-ocid="nav.home.link"
-          className="flex items-center gap-2.5 group"
-        >
-          <img
-            src="/assets/generated/digitech-logo-transparent.dim_120x120.png"
-            alt="DigiTech"
-            className="h-8 w-8 object-contain"
-          />
-          <span className="font-display text-xl font-bold text-gradient-cyan">
-            DigiTech
+    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-md">
+      <nav className="container flex h-16 items-center justify-between">
+        {/* Brand */}
+        <Link to="/" className="flex items-center gap-2.5 select-none">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/30">
+            <Zap className="h-4 w-4 text-primary" strokeWidth={2.5} />
+          </div>
+          <span className="font-display text-xl font-bold tracking-tight text-foreground">
+            Digitech
           </span>
         </Link>
 
-        {/* Nav Links */}
-        <div className="hidden md:flex items-center gap-1">
+        {/* Nav links */}
+        <div className="flex items-center gap-6">
           <Link
             to="/"
-            data-ocid="nav.home.tab"
-            className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
-            activeProps={{ className: "text-foreground bg-secondary/60" }}
+            className={navLinkClass("/")}
+            data-ocid="nav.products_link"
           >
-            Home
+            Products
           </Link>
-          <Link
-            to="/catalog"
-            data-ocid="nav.catalog.link"
-            className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
-            activeProps={{ className: "text-foreground bg-secondary/60" }}
-          >
-            Catalog
-          </Link>
-          <Link
-            to="/blog"
-            data-ocid="nav.blog.link"
-            className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
-            activeProps={{ className: "text-foreground bg-secondary/60" }}
-          >
-            Blog
-          </Link>
+
+          {isAuthenticated && (
+            <Link
+              to="/orders"
+              className={navLinkClass("/orders")}
+              data-ocid="nav.orders_link"
+            >
+              My Orders
+            </Link>
+          )}
+
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={cn(navLinkClass("/admin"), "flex items-center gap-1")}
+              data-ocid="nav.admin_link"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Admin
+            </Link>
+          )}
         </div>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-2">
-          {/* Cart */}
-          <Link to="/cart" data-ocid="nav.cart.link">
+        {/* Auth */}
+        <div className="flex items-center">
+          {isInitializing ? (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          ) : isAuthenticated ? (
             <Button
-              variant="ghost"
-              size="icon"
-              className="relative text-muted-foreground hover:text-foreground"
+              variant="outline"
+              size="sm"
+              onClick={clear}
+              className="gap-2 border-border/60 bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
+              data-ocid="nav.logout_button"
             >
-              <ShoppingCart className="h-5 w-5" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                  {cartCount > 9 ? "9+" : cartCount}
-                </span>
-              )}
+              <LogOut className="h-3.5 w-3.5" />
+              Sign Out
             </Button>
-          </Link>
-
-          {/* Auth */}
-          {isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  data-ocid="nav.user.dropdown_menu"
-                  className="gap-2 border-border text-foreground hover:bg-secondary"
-                >
-                  <User className="h-4 w-4" />
-                  <span className="hidden sm:inline max-w-[100px] truncate">
-                    {profile?.name ?? "Account"}
-                  </span>
-                  <ChevronDown className="h-3 w-3 opacity-60" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/profile"
-                    data-ocid="nav.profile.link"
-                    className="flex items-center gap-2 cursor-pointer"
-                  >
-                    <User className="h-4 w-4" />
-                    My Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/orders"
-                    data-ocid="nav.orders.link"
-                    className="flex items-center gap-2 cursor-pointer"
-                  >
-                    <Package className="h-4 w-4" />
-                    My Orders
-                  </Link>
-                </DropdownMenuItem>
-                {isSeller && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to="/seller"
-                      data-ocid="nav.seller.link"
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      Seller Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {isAdmin && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to="/transactions"
-                      data-ocid="nav.transactions.link"
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <ArrowUpDown className="h-4 w-4" />
-                      Transactions
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  data-ocid="nav.logout.button"
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 text-destructive cursor-pointer"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           ) : (
             <Button
-              data-ocid="nav.login.button"
               size="sm"
               onClick={login}
               disabled={isLoggingIn}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 glow-sm transition-all"
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+              data-ocid="nav.login_button"
             >
-              {isLoggingIn ? "Connecting…" : "Sign In"}
+              {isLoggingIn ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <LogIn className="h-3.5 w-3.5" />
+              )}
+              {isLoggingIn ? "Signing in…" : "Sign In"}
             </Button>
           )}
         </div>
