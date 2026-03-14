@@ -16,11 +16,19 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Bricolage Grotesque"', "sans-serif"],
+        display: ["Bricolage Grotesque", "sans-serif"],
         body: ["Outfit", "sans-serif"],
-        mono: ['"JetBrains Mono"', "monospace"],
+        mono: ["Geist Mono", "monospace"],
       },
       colors: {
+        success: {
+          DEFAULT: "oklch(var(--success))",
+          foreground: "oklch(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "oklch(var(--warning))",
+          foreground: "oklch(var(--warning-foreground))",
+        },
         border: "oklch(var(--border))",
         input: "oklch(var(--input))",
         ring: "oklch(var(--ring) / <alpha-value>)",
@@ -71,30 +79,14 @@ export default {
           border: "oklch(var(--sidebar-border))",
           ring: "oklch(var(--sidebar-ring))",
         },
-        // Semantic extras
-        cyan: {
-          DEFAULT: "oklch(0.78 0.18 195)",
-          dim: "oklch(0.78 0.18 195 / 0.15)",
-          glow: "oklch(0.78 0.18 195 / 0.35)",
-        },
-        violet: {
-          DEFAULT: "oklch(0.65 0.22 295)",
-          dim: "oklch(0.65 0.22 295 / 0.15)",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        xl: "calc(var(--radius) + 4px)",
-        "2xl": "calc(var(--radius) + 8px)",
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
-        "glow-sm": "0 0 12px oklch(0.78 0.18 195 / 0.25)",
-        glow: "0 0 24px oklch(0.78 0.18 195 / 0.35)",
-        "glow-lg": "0 0 48px oklch(0.78 0.18 195 / 0.3)",
-        card: "0 4px 24px oklch(0 0 0 / 0.3), 0 1px 4px oklch(0 0 0 / 0.2)",
       },
       keyframes: {
         "accordion-down": {
@@ -105,25 +97,10 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        shimmer: {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
-        },
-        "fade-up": {
-          from: { opacity: "0", transform: "translateY(16px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
-        },
-        pulse_glow: {
-          "0%, 100%": { boxShadow: "0 0 16px oklch(0.78 0.18 195 / 0.2)" },
-          "50%": { boxShadow: "0 0 32px oklch(0.78 0.18 195 / 0.5)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        shimmer: "shimmer 2s linear infinite",
-        "fade-up": "fade-up 0.4s ease-out",
-        "pulse-glow": "pulse_glow 3s ease-in-out infinite",
       },
     },
   },

@@ -8,9 +8,8 @@
     "shadcn-ui": "1.0.0",
     "build-template-react": "1.1.0",
     "initial-app": "1.0.0",
-    "authorization": "4.0.1",
-    "blob-storage": "4.0.0",
     "stripe": "3.0.0",
+    "authorization": "4.0.1",
     "http-outcalls": "3.0.0"
   },
   "tags": [],

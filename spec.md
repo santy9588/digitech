@@ -1,46 +1,39 @@
-# DigiTech
+# DigiTech Payment Gateway Integration
 
 ## Current State
-DigiTech is a digital product marketplace. It has:
-- Stripe-based checkout (createCheckoutSession, getStripeSessionStatus, setStripeConfiguration)
-- Product catalog, cart, orders, blog, seller dashboard, buyer orders
-- Authorization (admin/user/guest roles) and blob storage
-- CheckoutPage using Stripe redirect-based checkout
-- PaymentSuccessPage and PaymentFailurePage
-- ProfilePage with Stripe configuration UI for admins
+The DigiTech app is a fresh Caffeine project with a React frontend and a Motoko backend. Currently no payment gateway, product catalog, or checkout flow exists. The app uses the core-infrastructure, shadcn-ui, and build-template-react components.
 
 ## Requested Changes (Diff)
 
 ### Add
-- **Multi-gateway checkout selector** on CheckoutPage: user can choose between Stripe (card/Apple Pay/Google Pay via Stripe Payment Request API), PayPal, and a "Pay Later / Invoice" option
-- **PayPal checkout flow**: redirect to PayPal-hosted checkout via Stripe's PayPal integration (since Stripe supports PayPal as a payment method in checkout sessions) -- shown as a dedicated PayPal button
-- **Google Pay / Apple Pay** buttons rendered via Stripe Payment Request Button (Stripe.js) on the checkout page
-- **Transaction history page** (`/transactions`) listing all orders with payment method label, status badge, amount, and date
-- **Payment method badge** on orders: each order shows which payment gateway was used (Stripe Card, Google Pay, Apple Pay, PayPal)
-- **Backend**: Add `paymentMethod` field to Order type (e.g. "stripe", "paypal", "googlepay", "applepay", "card")
-- **Backend**: Add `createPayPalCheckoutSession` function that creates a Stripe Checkout session with PayPal payment method
-- **Backend**: Update `createOrder` to accept `paymentMethod` parameter
-- **Admin**: Payment gateway configuration panel on ProfilePage -- configure which gateways are enabled (Stripe card, PayPal, Google Pay, Apple Pay)
-- **Gateway settings stored** in backend: `enabledGateways` list and `paypalClientId` (optional)
-- **TransactionsPage**: Full transaction log, filterable by payment method and status
+- Stripe payment gateway integration via the Caffeine `stripe` component
+- Backend Motoko actor with:
+  - Product/service catalog management (list, get product)
+  - Order creation and tracking
+  - Payment session initiation (create Stripe Checkout session)
+  - Order status retrieval
+- Frontend UI with:
+  - Landing/home page with DigiTech branding
+  - Products/services listing page
+  - Individual product detail with "Buy Now" button
+  - Stripe Checkout flow triggered on purchase
+  - Order confirmation/success page
+  - Payment history/orders page
+  - Admin panel to manage products (add, edit, delete)
 
 ### Modify
-- **CheckoutPage**: Replace single Stripe button with a multi-gateway payment selector panel showing available gateway options as distinct buttons
-- **OrdersPage**: Show payment method badge alongside each order
-- **ProfilePage (admin)**: Extend Stripe config section to include gateway toggles
-- **Order type**: Add `paymentMethod` field
+- Main App routing to include all new pages
 
 ### Remove
-- Nothing removed; all existing Stripe flows preserved
+- Nothing
 
 ## Implementation Plan
-1. Update backend `Order` type to include `paymentMethod: Text` field
-2. Add `createPayPalCheckoutSession` backend function (Stripe checkout with PayPal method)
-3. Add `getEnabledGateways` and `setEnabledGateways` backend functions
-4. Update `createOrder` to accept `paymentMethod` parameter
-5. Regenerate backend.d.ts
-6. Build new CheckoutPage with multi-gateway selector (Stripe Card, Google Pay/Apple Pay via Stripe, PayPal)
-7. Build TransactionsPage (`/transactions`) with filtering and status badges
-8. Update OrdersPage to show payment method badges
-9. Add route for `/transactions` in App.tsx
-10. Update ProfilePage admin section with gateway enable/disable toggles
+1. Select `stripe` and `authorization` Caffeine components
+2. Generate Motoko backend with product catalog, order management, and Stripe payment session creation
+3. Build React frontend:
+   - App router with pages: Home, Products, ProductDetail, Checkout success, Orders, Admin
+   - ProductCard component with Buy Now CTA
+   - Stripe redirect-to-checkout integration using backend-provided session URL
+   - Orders table showing payment history and statuses
+   - Admin CRUD UI for managing products/services
+4. Deploy
