@@ -6,57 +6,139 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
-import Footer from "./components/Footer";
-import Navbar from "./components/Navbar";
-import AdminPage from "./pages/AdminPage";
+import Layout from "./components/Layout";
+import ProfileSetupModal from "./components/ProfileSetupModal";
+import StripeSetupModal from "./components/StripeSetupModal";
+import BlogPage from "./pages/BlogPage";
+import BlogPostPage from "./pages/BlogPostPage";
+import CartPage from "./pages/CartPage";
+import CatalogPage from "./pages/CatalogPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import HomePage from "./pages/HomePage";
 import OrdersPage from "./pages/OrdersPage";
-import ProductsPage from "./pages/ProductsPage";
-import SuccessPage from "./pages/SuccessPage";
+import PaymentFailurePage from "./pages/PaymentFailurePage";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import ProfilePage from "./pages/ProfilePage";
+import SellerDashboardPage from "./pages/SellerDashboardPage";
+import TransactionsPage from "./pages/TransactionsPage";
 
-// ── Root layout ──────────────────────────────────────────────────────────────
+// ── Routes ─────────────────────────────────────────────────────
 const rootRoute = createRootRoute({
   component: () => (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
-      <main className="flex-1">
-        <Outlet />
-      </main>
-      <Footer />
-      <Toaster richColors position="top-right" />
-    </div>
+    <>
+      <Outlet />
+      <Toaster position="bottom-right" theme="dark" />
+      <ProfileSetupModal />
+      <StripeSetupModal />
+    </>
   ),
 });
 
-// ── Routes ───────────────────────────────────────────────────────────────────
-const indexRoute = createRoute({
+const layoutRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/",
-  component: ProductsPage,
+  id: "layout",
+  component: () => (
+    <Layout>
+      <Outlet />
+    </Layout>
+  ),
 });
 
-const successRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/success",
-  component: SuccessPage,
+const homeRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/",
+  component: HomePage,
+});
+
+const catalogRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/catalog",
+  component: CatalogPage,
+});
+
+const productDetailRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/product/$id",
+  component: ProductDetailPage,
+});
+
+const cartRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/cart",
+  component: CartPage,
+});
+
+const checkoutRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/checkout",
+  component: CheckoutPage,
+});
+
+const paymentSuccessRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/payment-success",
+  component: PaymentSuccessPage,
+});
+
+const paymentFailureRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/payment-failure",
+  component: PaymentFailurePage,
+});
+
+const sellerRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/seller",
+  component: SellerDashboardPage,
 });
 
 const ordersRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => layoutRoute,
   path: "/orders",
   component: OrdersPage,
 });
 
-const adminRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/admin",
-  component: AdminPage,
+const blogRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/blog",
+  component: BlogPage,
+});
+
+const blogPostRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/blog/$id",
+  component: BlogPostPage,
+});
+
+const profileRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/profile",
+  component: ProfilePage,
+});
+
+const transactionsRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/transactions",
+  component: TransactionsPage,
 });
 
 const routeTree = rootRoute.addChildren([
-  indexRoute,
-  successRoute,
-  ordersRoute,
-  adminRoute,
+  layoutRoute.addChildren([
+    homeRoute,
+    catalogRoute,
+    productDetailRoute,
+    cartRoute,
+    checkoutRoute,
+    paymentSuccessRoute,
+    paymentFailureRoute,
+    sellerRoute,
+    ordersRoute,
+    blogRoute,
+    blogPostRoute,
+    profileRoute,
+    transactionsRoute,
+  ]),
 ]);
 
 const router = createRouter({ routeTree });
