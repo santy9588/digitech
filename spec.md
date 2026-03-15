@@ -1,46 +1,36 @@
 # DigiTech
 
 ## Current State
-DigiTech is a digital product marketplace. It has:
-- Stripe-based checkout (createCheckoutSession, getStripeSessionStatus, setStripeConfiguration)
-- Product catalog, cart, orders, blog, seller dashboard, buyer orders
-- Authorization (admin/user/guest roles) and blob storage
-- CheckoutPage using Stripe redirect-based checkout
-- PaymentSuccessPage and PaymentFailurePage
-- ProfilePage with Stripe configuration UI for admins
+DigiTech is a digital product marketplace with Stripe-based payments supporting Credit/Debit Card, Google Pay, Apple Pay, and PayPal. The CheckoutPage has a gateway selector with 4 options. ProfilePage has a Payment Configuration section with toggle switches. TransactionsPage shows orders with gateway badges.
 
 ## Requested Changes (Diff)
 
 ### Add
-- **Multi-gateway checkout selector** on CheckoutPage: user can choose between Stripe (card/Apple Pay/Google Pay via Stripe Payment Request API), PayPal, and a "Pay Later / Invoice" option
-- **PayPal checkout flow**: redirect to PayPal-hosted checkout via Stripe's PayPal integration (since Stripe supports PayPal as a payment method in checkout sessions) -- shown as a dedicated PayPal button
-- **Google Pay / Apple Pay** buttons rendered via Stripe Payment Request Button (Stripe.js) on the checkout page
-- **Transaction history page** (`/transactions`) listing all orders with payment method label, status badge, amount, and date
-- **Payment method badge** on orders: each order shows which payment gateway was used (Stripe Card, Google Pay, Apple Pay, PayPal)
-- **Backend**: Add `paymentMethod` field to Order type (e.g. "stripe", "paypal", "googlepay", "applepay", "card")
-- **Backend**: Add `createPayPalCheckoutSession` function that creates a Stripe Checkout session with PayPal payment method
-- **Backend**: Update `createOrder` to accept `paymentMethod` parameter
-- **Admin**: Payment gateway configuration panel on ProfilePage -- configure which gateways are enabled (Stripe card, PayPal, Google Pay, Apple Pay)
-- **Gateway settings stored** in backend: `enabledGateways` list and `paypalClientId` (optional)
-- **TransactionsPage**: Full transaction log, filterable by payment method and status
+- PhonePe gateway option
+- Google Pay (already present, keep)
+- Amazon Pay gateway option
+- Paytm gateway option
+- PayPal (already present, keep)
+- UPI (generic) gateway option
+- QR Code payment option (show a mock QR code on selection)
+- Credit Card (already present via Stripe)
+- Debit Card (already present via Stripe)
+- International Card section label
+- Net Banking option
+- BHIM UPI option
+- Visa/Mastercard/RuPay/Amex labels under card section
 
 ### Modify
-- **CheckoutPage**: Replace single Stripe button with a multi-gateway payment selector panel showing available gateway options as distinct buttons
-- **OrdersPage**: Show payment method badge alongside each order
-- **ProfilePage (admin)**: Extend Stripe config section to include gateway toggles
-- **Order type**: Add `paymentMethod` field
+- CheckoutPage: expand gateway grid from 4 to full list organized into sections (Cards, UPI & Wallets, Buy Now Pay Later, International)
+- ProfilePage: Payment Configuration toggles to include all new gateways
+- TransactionsPage: gateway badges updated to cover all new methods
+- Gateway selector UI: grouped layout with section headers
 
 ### Remove
-- Nothing removed; all existing Stripe flows preserved
+- Nothing removed
 
 ## Implementation Plan
-1. Update backend `Order` type to include `paymentMethod: Text` field
-2. Add `createPayPalCheckoutSession` backend function (Stripe checkout with PayPal method)
-3. Add `getEnabledGateways` and `setEnabledGateways` backend functions
-4. Update `createOrder` to accept `paymentMethod` parameter
-5. Regenerate backend.d.ts
-6. Build new CheckoutPage with multi-gateway selector (Stripe Card, Google Pay/Apple Pay via Stripe, PayPal)
-7. Build TransactionsPage (`/transactions`) with filtering and status badges
-8. Update OrdersPage to show payment method badges
-9. Add route for `/transactions` in App.tsx
-10. Update ProfilePage admin section with gateway enable/disable toggles
+1. Update CheckoutPage to show a comprehensive, grouped payment gateway selector with sections: Cards (Credit, Debit, International), UPI & Wallets (PhonePe, Google Pay, Paytm, Amazon Pay, BHIM UPI, Generic UPI), QR Code (shows inline QR), Other (PayPal, Net Banking)
+2. Add QR code display panel when QR Code is selected
+3. Update ProfilePage Payment Configuration to list and toggle all new gateways
+4. Update TransactionsPage badge color mapping for all new gateway types

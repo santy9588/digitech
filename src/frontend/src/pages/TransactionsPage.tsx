@@ -43,9 +43,18 @@ const METHOD_CONFIG: Record<
   string,
   { label: string; color: string; bg: string }
 > = {
-  card: { label: "Card", color: "#fff", bg: "#2563EB" },
-  paypal: { label: "PayPal", color: "#fff", bg: "#003087" },
+  card: { label: "Credit Card", color: "#fff", bg: "#1A1F71" },
+  debit: { label: "Debit Card", color: "#fff", bg: "#2563EB" },
+  international: { label: "Intl Card", color: "#fff", bg: "#0ea5e9" },
+  phonepe: { label: "PhonePe", color: "#fff", bg: "#5f259f" },
   googlepay: { label: "Google Pay", color: "#fff", bg: "#34A853" },
+  paytm: { label: "Paytm", color: "#fff", bg: "#00B9F1" },
+  amazonpay: { label: "Amazon Pay", color: "#232F3E", bg: "#FF9900" },
+  bhimupi: { label: "BHIM UPI", color: "#fff", bg: "#1B3A6B" },
+  upi: { label: "UPI", color: "#fff", bg: "#097939" },
+  qrcode: { label: "QR Code", color: "#fff", bg: "#0d9488" },
+  paypal: { label: "PayPal", color: "#fff", bg: "#003087" },
+  netbanking: { label: "Net Banking", color: "#fff", bg: "#475569" },
   applepay: { label: "Apple Pay", color: "#fff", bg: "#1c1c1e" },
 };
 
@@ -127,27 +136,61 @@ function StatCard({
 type FilterType =
   | "all"
   | "card"
-  | "paypal"
+  | "debit"
+  | "international"
+  | "phonepe"
   | "googlepay"
+  | "paytm"
+  | "amazonpay"
+  | "bhimupi"
+  | "upi"
+  | "qrcode"
+  | "paypal"
+  | "netbanking"
   | "applepay"
-  | "pending"
   | "paid"
+  | "pending"
   | "failed";
 
 const FILTER_TABS: { id: FilterType; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "card", label: "Card" },
-  { id: "paypal", label: "PayPal" },
+  { id: "card", label: "Credit Card" },
+  { id: "debit", label: "Debit Card" },
+  { id: "international", label: "Intl Card" },
+  { id: "phonepe", label: "PhonePe" },
   { id: "googlepay", label: "Google Pay" },
+  { id: "paytm", label: "Paytm" },
+  { id: "amazonpay", label: "Amazon Pay" },
+  { id: "bhimupi", label: "BHIM UPI" },
+  { id: "upi", label: "UPI" },
+  { id: "qrcode", label: "QR Code" },
+  { id: "paypal", label: "PayPal" },
+  { id: "netbanking", label: "Net Banking" },
   { id: "applepay", label: "Apple Pay" },
   { id: "paid", label: "Paid" },
   { id: "pending", label: "Pending" },
   { id: "failed", label: "Failed" },
 ];
 
+const GATEWAY_FILTER_IDS = new Set([
+  "card",
+  "debit",
+  "international",
+  "phonepe",
+  "googlepay",
+  "paytm",
+  "amazonpay",
+  "bhimupi",
+  "upi",
+  "qrcode",
+  "paypal",
+  "netbanking",
+  "applepay",
+]);
+
 function filterOrders(orders: AnyOrder[], filter: FilterType): AnyOrder[] {
   if (filter === "all") return orders;
-  if (["card", "paypal", "googlepay", "applepay"].includes(filter)) {
+  if (GATEWAY_FILTER_IDS.has(filter)) {
     return orders.filter(
       (o) => (o.paymentMethod ?? "card").toLowerCase() === filter,
     );

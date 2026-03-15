@@ -33,6 +33,131 @@ import {
   useSetStripeConfiguration,
 } from "../hooks/useQueries";
 
+// ── Gateway config ────────────────────────────────────────────────
+
+interface GatewayToggleDef {
+  id: string;
+  label: string;
+  description: string;
+  color: string;
+  section: "cards" | "upi" | "qr" | "other";
+}
+
+const GATEWAY_TOGGLES: GatewayToggleDef[] = [
+  // Cards
+  {
+    id: "card",
+    label: "Credit Card",
+    description: "Visa, Mastercard, RuPay, Amex",
+    color: "#1A1F71",
+    section: "cards",
+  },
+  {
+    id: "debit",
+    label: "Debit Card",
+    description: "All major bank debit cards",
+    color: "#2563EB",
+    section: "cards",
+  },
+  {
+    id: "international",
+    label: "International Cards",
+    description: "International Visa / Mastercard",
+    color: "#0ea5e9",
+    section: "cards",
+  },
+  // UPI
+  {
+    id: "phonepe",
+    label: "PhonePe",
+    description: "India UPI wallet",
+    color: "#5f259f",
+    section: "upi",
+  },
+  {
+    id: "googlepay",
+    label: "Google Pay",
+    description: "Fast & secure",
+    color: "#34A853",
+    section: "upi",
+  },
+  {
+    id: "paytm",
+    label: "Paytm",
+    description: "Paytm wallet & UPI",
+    color: "#00B9F1",
+    section: "upi",
+  },
+  {
+    id: "amazonpay",
+    label: "Amazon Pay",
+    description: "Amazon balance & linked cards",
+    color: "#FF9900",
+    section: "upi",
+  },
+  {
+    id: "bhimupi",
+    label: "BHIM UPI",
+    description: "Government UPI app",
+    color: "#1B3A6B",
+    section: "upi",
+  },
+  {
+    id: "upi",
+    label: "UPI (Generic)",
+    description: "Any UPI ID",
+    color: "#097939",
+    section: "upi",
+  },
+  // QR
+  {
+    id: "qrcode",
+    label: "QR Code",
+    description: "Scan to pay via any UPI app",
+    color: "#0d9488",
+    section: "qr",
+  },
+  // Other
+  {
+    id: "paypal",
+    label: "PayPal",
+    description: "PayPal account",
+    color: "#003087",
+    section: "other",
+  },
+  {
+    id: "netbanking",
+    label: "Net Banking",
+    description: "All major banks",
+    color: "#475569",
+    section: "other",
+  },
+  {
+    id: "applepay",
+    label: "Apple Pay",
+    description: "iOS & macOS devices",
+    color: "#1c1c1e",
+    section: "other",
+  },
+];
+
+const SECTION_LABELS: Record<string, string> = {
+  cards: "💳 Cards",
+  upi: "📱 UPI & Mobile Wallets",
+  qr: "🔲 QR Code",
+  other: "🌐 Other Methods",
+};
+
+const GATEWAY_SECTIONS = (["cards", "upi", "qr", "other"] as const).map(
+  (sec) => ({
+    key: sec,
+    label: SECTION_LABELS[sec],
+    gateways: GATEWAY_TOGGLES.filter((g) => g.section === sec),
+  }),
+);
+
+// ── Page ──────────────────────────────────────────────────────────
+
 export default function ProfilePage() {
   const { identity } = useInternetIdentity();
   const isAuthenticated = !!identity;
@@ -50,15 +175,14 @@ export default function ProfilePage() {
   // Stripe config
   const [stripeKey, setStripeKey] = useState("");
   const [stripeCountries, setStripeCountries] = useState(
-    "US, CA, GB, AU, DE, FR, JP",
+    "US, CA, GB, AU, DE, FR, JP, IN",
   );
   const [stripeOpen, setStripeOpen] = useState(false);
 
-  // Gateway toggles
-  const [gatewayCard, setGatewayCard] = useState(true);
-  const [gatewayPaypal, setGatewayPaypal] = useState(true);
-  const [gatewayGooglepay, setGatewayGooglepay] = useState(true);
-  const [gatewayApplepay, setGatewayApplepay] = useState(true);
+  // Gateway toggles — keyed by gateway id
+  const [gatewayStates, setGatewayStates] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(GATEWAY_TOGGLES.map((g) => [g.id, true])),
+  );
   const [gatewaySaving, setGatewaySaving] = useState(false);
 
   useEffect(() => {
@@ -70,19 +194,18 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (enabledGateways) {
-      setGatewayCard(enabledGateways.includes("card"));
-      setGatewayPaypal(enabledGateways.includes("paypal"));
-      setGatewayGooglepay(enabledGateways.includes("googlepay"));
-      setGatewayApplepay(enabledGateways.includes("applepay"));
+      setGatewayStates(
+        Object.fromEntries(
+          GATEWAY_TOGGLES.map((g) => [g.id, enabledGateways.includes(g.id)]),
+        ),
+      );
     }
   }, [enabledGateways]);
 
   const handleGatewaySave = async () => {
-    const selected: string[] = [];
-    if (gatewayCard) selected.push("card");
-    if (gatewayPaypal) selected.push("paypal");
-    if (gatewayGooglepay) selected.push("googlepay");
-    if (gatewayApplepay) selected.push("applepay");
+    const selected = GATEWAY_TOGGLES.filter((g) => gatewayStates[g.id]).map(
+      (g) => g.id,
+    );
     if (selected.length === 0) {
       toast.error("Please enable at least one payment gateway");
       return;
@@ -331,7 +454,7 @@ export default function ProfilePage() {
                     <Label>Allowed Countries</Label>
                     <Input
                       data-ocid="profile.stripe.countries.input"
-                      placeholder="US, CA, GB..."
+                      placeholder="US, CA, GB, IN..."
                       value={stripeCountries}
                       onChange={(e) => setStripeCountries(e.target.value)}
                       className="bg-secondary/50 border-border"
@@ -350,26 +473,25 @@ export default function ProfilePage() {
                       data-ocid="profile.stripe.save.submit_button"
                       onClick={handleStripeSave}
                       disabled={setStripeConfig.isPending}
-                      className="flex-1 bg-primary text-primary-foreground"
+                      className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
                     >
                       {setStripeConfig.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        "Save"
+                        "Save Stripe Key"
                       )}
                     </Button>
                   </div>
                 </div>
               ) : (
                 <Button
-                  data-ocid="profile.stripe.configure.button"
+                  data-ocid="profile.stripe.open_modal_button"
                   variant="outline"
                   onClick={() => setStripeOpen(true)}
-                  className="w-full border-border"
+                  className="w-full border-border hover:border-primary/40"
                 >
-                  {stripeConfigured
-                    ? "Update Stripe Config"
-                    : "Configure Stripe"}
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  {stripeConfigured ? "Update Stripe Key" : "Configure Stripe"}
                 </Button>
               )}
             </div>
@@ -378,122 +500,82 @@ export default function ProfilePage() {
           {/* Payment Gateways (for admins) */}
           {isSeller && (
             <div className="card-glass rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="p-1.5 rounded-lg bg-primary/10">
-                  <Wallet className="h-4 w-4 text-primary" />
-                </div>
+              <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h3 className="font-display font-semibold">
+                  <h3 className="font-display font-semibold flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-primary" />
                     Payment Gateways
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Choose which payment methods to offer at checkout
+                    Enable or disable payment methods for buyers
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                {/* Card */}
-                <div className="flex items-center justify-between py-3 border-b border-border">
-                  <div className="flex items-center gap-3">
-                    <CreditCard className="h-4 w-4 text-primary" />
-                    <div>
-                      <p className="text-sm font-medium">Credit / Debit Card</p>
-                      <p className="text-xs text-muted-foreground">
-                        Visa, Mastercard, Amex — via Stripe
-                      </p>
+              <div className="space-y-6">
+                {GATEWAY_SECTIONS.map((section, sIdx) => (
+                  <div key={section.key}>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                      {section.label}
+                    </p>
+                    <div className="space-y-3">
+                      {section.gateways.map((gw, gIdx) => {
+                        const ocidIdx = sIdx * 10 + gIdx + 1;
+                        return (
+                          <div
+                            key={gw.id}
+                            data-ocid={`profile.gateway_toggle.${ocidIdx}`}
+                            className="flex items-center justify-between rounded-lg bg-secondary/20 border border-border px-4 py-3 hover:bg-secondary/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="h-7 w-7 rounded-md flex items-center justify-center flex-shrink-0"
+                                style={{ background: gw.color }}
+                              >
+                                <span className="text-white text-[9px] font-bold">
+                                  {gw.label.slice(0, 2).toUpperCase()}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">
+                                  {gw.label}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {gw.description}
+                                </p>
+                              </div>
+                            </div>
+                            <Switch
+                              checked={gatewayStates[gw.id] ?? false}
+                              onCheckedChange={(checked) =>
+                                setGatewayStates((prev) => ({
+                                  ...prev,
+                                  [gw.id]: checked,
+                                }))
+                              }
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                  <Switch
-                    data-ocid="profile.gateway.card.switch"
-                    checked={gatewayCard}
-                    onCheckedChange={setGatewayCard}
-                  />
-                </div>
-
-                {/* PayPal */}
-                <div className="flex items-center justify-between py-3 border-b border-border">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold">
-                      <span style={{ color: "#003087" }}>Pay</span>
-                      <span style={{ color: "#009CDE" }}>Pal</span>
-                    </span>
-                    <div>
-                      <p className="text-sm font-medium">PayPal</p>
-                      <p className="text-xs text-muted-foreground">
-                        PayPal checkout — requires Stripe PayPal integration
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    data-ocid="profile.gateway.paypal.switch"
-                    checked={gatewayPaypal}
-                    onCheckedChange={setGatewayPaypal}
-                  />
-                </div>
-
-                {/* Google Pay */}
-                <div className="flex items-center justify-between py-3 border-b border-border">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold">
-                      <span style={{ color: "#4285F4" }}>G</span>
-                      <span style={{ color: "#EA4335" }}>o</span>
-                      <span style={{ color: "#FBBC05" }}>o</span>
-                      <span style={{ color: "#4285F4" }}>g</span>
-                      <span style={{ color: "#34A853" }}>l</span>
-                      <span style={{ color: "#EA4335" }}>e</span>
-                    </span>
-                    <div>
-                      <p className="text-sm font-medium">Google Pay</p>
-                      <p className="text-xs text-muted-foreground">
-                        Handled automatically by Stripe
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    data-ocid="profile.gateway.googlepay.switch"
-                    checked={gatewayGooglepay}
-                    onCheckedChange={setGatewayGooglepay}
-                  />
-                </div>
-
-                {/* Apple Pay */}
-                <div className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm">🍎</span>
-                    <div>
-                      <p className="text-sm font-medium">Apple Pay</p>
-                      <p className="text-xs text-muted-foreground">
-                        Handled automatically by Stripe
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    data-ocid="profile.gateway.applepay.switch"
-                    checked={gatewayApplepay}
-                    onCheckedChange={setGatewayApplepay}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4 p-3 rounded-lg bg-secondary/30 text-xs text-muted-foreground">
-                Google Pay and Apple Pay are handled automatically by Stripe
-                when enabled. Availability depends on buyer's browser and
-                device.
+                ))}
               </div>
 
               <Button
                 data-ocid="profile.gateways.save.submit_button"
                 onClick={handleGatewaySave}
                 disabled={gatewaySaving}
-                className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90"
+                className="w-full mt-5 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {gatewaySaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…
                   </>
                 ) : (
-                  "Save Gateway Settings"
+                  <>
+                    <Save className="mr-2 h-4 w-4" /> Save Gateway Settings
+                  </>
                 )}
               </Button>
             </div>
