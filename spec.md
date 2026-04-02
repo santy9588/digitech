@@ -1,36 +1,38 @@
-# DigiTech
+# Digitech
 
 ## Current State
-DigiTech is a digital product marketplace with Stripe-based payments supporting Credit/Debit Card, Google Pay, Apple Pay, and PayPal. The CheckoutPage has a gateway selector with 4 options. ProfilePage has a Payment Configuration section with toggle switches. TransactionsPage shows orders with gateway badges.
+
+- Full-stack Stripe-integrated e-commerce app for Digitech.
+- Backend: Motoko with product storage (seeded with 3 plans), order management, Stripe checkout, admin-only configuration.
+- Frontend: Products page (browse + Buy Now), Orders page, Admin page (orders table + Stripe config form), Success page.
+- Admin page is only visible in the navbar if the user already has admin role -- no way to navigate to it without knowing the URL.
+- No product management in the admin: admins cannot add, edit, or delete products from the UI.
+- Backend has no addProduct/updateProduct/deleteProduct endpoints.
 
 ## Requested Changes (Diff)
 
 ### Add
-- PhonePe gateway option
-- Google Pay (already present, keep)
-- Amazon Pay gateway option
-- Paytm gateway option
-- PayPal (already present, keep)
-- UPI (generic) gateway option
-- QR Code payment option (show a mock QR code on selection)
-- Credit Card (already present via Stripe)
-- Debit Card (already present via Stripe)
-- International Card section label
-- Net Banking option
-- BHIM UPI option
-- Visa/Mastercard/RuPay/Amex labels under card section
+- Backend: `addProduct`, `updateProduct`, `deleteProduct` admin-only endpoints.
+- Admin page: "Product Management" section to list all products with an upload/add form (name, description, price, currency) and delete per row.
+- Admin page: Always show an "Admin" link/button in the navbar or a dedicated entry point so admins can navigate to the page easily after signing in.
+- Products page: Products come from backend (seeded data already exists); admin-uploaded products appear immediately.
 
 ### Modify
-- CheckoutPage: expand gateway grid from 4 to full list organized into sections (Cards, UPI & Wallets, Buy Now Pay Later, International)
-- ProfilePage: Payment Configuration toggles to include all new gateways
-- TransactionsPage: gateway badges updated to cover all new methods
-- Gateway selector UI: grouped layout with section headers
+- Admin page: Add a new "Product Management" tab/section alongside the existing orders table and Stripe config.
+- Navbar: Show Admin link immediately when `isAdmin` resolves true (already done); no change needed there.
+- ProductsPage: Continue to show sample products when backend returns empty, but prefer live data.
 
 ### Remove
-- Nothing removed
+- Nothing removed.
 
 ## Implementation Plan
-1. Update CheckoutPage to show a comprehensive, grouped payment gateway selector with sections: Cards (Credit, Debit, International), UPI & Wallets (PhonePe, Google Pay, Paytm, Amazon Pay, BHIM UPI, Generic UPI), QR Code (shows inline QR), Other (PayPal, Net Banking)
-2. Add QR code display panel when QR Code is selected
-3. Update ProfilePage Payment Configuration to list and toggle all new gateways
-4. Update TransactionsPage badge color mapping for all new gateway types
+
+1. Update Motoko backend to add `addProduct(product)`, `updateProduct(product)`, `deleteProduct(productId)` functions gated to admin role.
+2. Regenerate backend.d.ts bindings.
+3. Add `useAddProduct`, `useUpdateProduct`, `useDeleteProduct` mutations to `useQueries.ts`.
+4. In `AdminPage.tsx`, add a "Products" section:
+   - Table listing all current products with name, price, and a delete button per row.
+   - "Add Product" form with fields: name, description, price (dollars), currency selector.
+   - Submit creates a new product via `addProduct`.
+5. Ensure Stripe config section and orders table remain intact.
+6. Checkout flow: no changes needed -- already functional once Stripe key is entered.
